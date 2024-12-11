@@ -211,15 +211,18 @@ FILE_NAME = ('clf=IsolationForest&'
              'n_estimators=50&'
              'random_state=11')
 
+_sklearn_version_tuple = None
+
 try:
     import sklearn
     import joblib
-    sklearn_imported = True
+    _sklearn_version_tuple = tuple(int(_) for _ in sklearn.__version__.split('.'))
+    use_pickled_file = _sklearn_version_tuple < (0, 24, 2)
 except ImportError:
-    sklearn_imported = False
+    use_pickled_file = False
 
 
-if not sklearn_imported:
+if not use_pickled_file:
 
     def load_default_trained_model():
         x, y = [], []
@@ -266,23 +269,18 @@ else:
         root_dir = ROOT_DIR
         file_name = FILE_NAME
         # modify root_dir or file_name according to sklearn version:
-        try:
-            _sklearn_version_tuple = tuple(int(_) for _ in sklearn.__version__.split('.'))
-        except (ImportError, ValueError, TypeError):
-            _sklearn_version_tuple = None
-        if _sklearn_version_tuple is not None:
-            if _sklearn_version_tuple < (0, 22):
-                root_dir = join(root_dir, 'sklearn<0.22.0')
-                file_name = ('clf=IsolationForest&' \
-                             'tr_set=uniform_train.hdf&'
-                             'feats=psd@5sec&'
-                             'behaviour=new&'
-                             'contamination=auto&'
-                             'max_samples=4096&'
-                             'n_estimators=50&'
-                             'random_state=11')
-            elif _sklearn_version_tuple < (0, 24, 2):
-                root_dir = join(root_dir, 'sklearn<0.24.2')
+        if _sklearn_version_tuple < (0, 22):
+            root_dir = join(root_dir, 'sklearn<0.22.0')
+            file_name = ('clf=IsolationForest&' \
+                         'tr_set=uniform_train.hdf&'
+                         'feats=psd@5sec&'
+                         'behaviour=new&'
+                         'contamination=auto&'
+                         'max_samples=4096&'
+                         'n_estimators=50&'
+                         'random_state=11')
+        else:  # _sklearn_version_tuple < (0, 24, 2):
+            root_dir = join(root_dir, 'sklearn<0.24.2')
 
         return join(root_dir, file_name)
 
